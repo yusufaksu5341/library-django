@@ -1,8 +1,8 @@
+
 from django.contrib import admin
-from django.urls import path
-from users import views
+from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.home, name='home'),
+    path('', include('users.urls')),  # users app'in URL'lerini root'a bağladık
 ]

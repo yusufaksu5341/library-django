@@ -25,9 +25,22 @@ input:focus{outline:none;border-color:var(--accent)}
 <div class="login-card">
 <h2>KTÜ Kütüphanesi</h2>
 <form id="loginForm" class="form-grid">
-<label><span>Kullanıcı Adı</span><input type="text" name="username" required placeholder="ornek@ktu.edu.tr"></label>
-<label><span>Parola</span><input type="password" name="password" required placeholder="••••••••"></label>
-<button type="submit" class="btn">Giriş Yap</button>
+    <label><span>Ad</span><input type="text" name="name"></label>
+        <label><span>Soyad</span><input type="text" name="lastName"></label>
+<label><span>Kullanıcı Adı</span><input type="email" name="schoolMail" required placeholder="ornek@ktu.edu.tr"></label>
+<label><span>Parola</span><input type="password" name="password" required placeholder="••••••••"></label><label><span>Parola Tekrar</span><input type="password" name="password" required placeholder="••••••••"></label>
+
+
+
+    <a href="signup.html.html"><button type="submit" class="btn">Kayıt Ol</button></a>
+    <div style="display:flex;align-items:center;text-align:center;margin:20px 0;">
+  <hr style="flex:1;border:none;border-top:2px solid #ccc;">
+  <span style="padding:0 10px;font-weight:bold;">YADA</span>
+  <hr style="flex:1;border:none;border-top:2px solid #ccc;">
+</div>
+    <p>Hesabın var mı?</p>
+    <a href="login.html"><button type="submit" class="btn">Giriş Yap</button></a>
+
 </form>
 </div>
 <div class="footer">© 2025 KTÜ Kütüphanesi</div>
