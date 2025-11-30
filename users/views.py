@@ -1,7 +1,8 @@
+
 from django.shortcuts import render
 
-def home(request):
-    return render(request, 'users/login.html',)
+def login_view(request):
+    return render(request, 'users/signup.html')
 
-def signup(request):
-    return render(request, 'users/signup.html',)
+def signup_view(request):
+    return render(request, 'users/signup.html')
