@@ -1,10 +1,11 @@
 
 # users/views.py
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import LibraryUser
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 from django.db import IntegrityError
+
 
 def login_view(request):
     if request.method == 'POST':
@@ -18,11 +19,11 @@ def login_view(request):
         try:
             user = LibraryUser.objects.get(school_mail=school_mail)
             if check_password(password, user.password):
-                # Login başarılı - session'a user bilgisi eklenebilir
+                # Login başarılı - session'a user bilgisi eklenir
                 request.session['user_id'] = user.id
                 request.session['user_mail'] = user.school_mail
                 messages.success(request, f'Hoş geldin {user.name}!')
-                return redirect('/')  # Ana sayfaya yönlendir
+                return redirect('users:home')
             else:
                 messages.error(request, 'Hatalı şifre!')
         except LibraryUser.DoesNotExist:
@@ -100,5 +101,25 @@ def signup(request):
             return redirect('users:login')
         except Exception:
             return redirect('login')
+
+    return render(request, 'signup.html')
+
+
+def home_view(request):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('users:login')
+
+    user = get_object_or_404(LibraryUser, pk=user_id)
+    return render(request, 'home.html', {'user': user})
+
+
+def logout_view(request):
+    try:
+        request.session.flush()
+    except Exception:
+        pass
+    messages.info(request, 'Çıkış yapıldı.')
+    return redirect('users:login')
 
     return render(request, 'signup.html')
