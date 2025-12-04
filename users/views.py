@@ -121,5 +121,3 @@ def logout_view(request):
         pass
     messages.info(request, 'Çıkış yapıldı.')
     return redirect('users:login')
-
-    return render(request, 'signup.html')
