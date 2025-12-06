@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import LibraryUser
+from .models import LibraryUser, Book
 
 
 @admin.register(LibraryUser)
@@ -16,3 +16,11 @@ class LibraryUserAdmin(admin.ModelAdmin):
     
     fields = ('name', 'last_name', 'school_mail')
     readonly_fields = []
+
+
+@admin.register(Book)
+class BookAdmin(admin.ModelAdmin):
+    list_display = ('title', 'author', 'published_year', 'isbn', 'available_count')
+    search_fields = ('title', 'author', 'isbn')
+    list_filter = ('author', 'published_year')
+    ordering = ('title',)

@@ -1,7 +1,7 @@
 
 # users/views.py
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import LibraryUser
+from .models import LibraryUser, Book
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 from django.db import IntegrityError
@@ -111,7 +111,8 @@ def home_view(request):
         return redirect('users:login')
 
     user = get_object_or_404(LibraryUser, pk=user_id)
-    return render(request, 'home.html', {'user': user})
+    books = Book.objects.all().order_by('title')
+    return render(request, 'home.html', {'user': user, 'books': books})
 
 
 def logout_view(request):
