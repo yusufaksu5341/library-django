@@ -1,26 +1,56 @@
 from django.contrib import admin
-from .models import LibraryUser, Book
+from .models import LibraryUser, Author, Category, Book, Loan, Penalty
 
 
 @admin.register(LibraryUser)
 class LibraryUserAdmin(admin.ModelAdmin):
-    list_display = ('school_mail', 'name', 'last_name', 'id', 'password_display')
+    list_display = ('school_mail', 'name', 'last_name', 'id', 'get_active_loan')
     search_fields = ('school_mail', 'name', 'last_name')
     list_filter = ('name', 'last_name')
     ordering = ('school_mail',)
-    
-   
-    def password_display(self, obj):
-        return obj.password[:50] + '...' if len(obj.password) > 50 else obj.password
-    password_display.short_description = 'Şifre (Hash)'
-    
-    fields = ('name', 'last_name', 'school_mail')
-    readonly_fields = []
+
+    def get_active_loan(self, obj):
+        active_loan = Loan.objects.filter(user=obj, status='active').select_related('book').first()
+        return active_loan.book.title if active_loan else '-'
+    get_active_loan.short_description = 'Aktif Ödünç Kitap'
+
+
+@admin.register(Author)
+class AuthorAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
 
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'published_year', 'isbn', 'available_count')
-    search_fields = ('title', 'author', 'isbn')
-    list_filter = ('author', 'published_year')
+    list_display = ('title', 'author', 'category', 'id', 'available_count', 'total_count', 'get_active_borrowers')
+    search_fields = ('title', 'author__name')
+    list_filter = ('author', 'category', 'published_year')
     ordering = ('title',)
+    readonly_fields = ('available_count',)
+
+    def get_active_borrowers(self, obj):
+        borrowers = Loan.objects.filter(book=obj, status='active').select_related('user').values_list('user__school_mail', flat=True)
+        return ', '.join(borrowers) if borrowers else '-'
+    get_active_borrowers.short_description = 'Aktif Ödünç Alanlar'
+
+
+@admin.register(Loan)
+class LoanAdmin(admin.ModelAdmin):
+    list_display = ('user', 'book', 'borrowed_at', 'due_at', 'returned_at', 'status')
+    search_fields = ('user__school_mail', 'book__title')
+    list_filter = ('status', 'borrowed_at')
+    readonly_fields = ('borrowed_at',)
+
+
+@admin.register(Penalty)
+class PenaltyAdmin(admin.ModelAdmin):
+    list_display = ('loan', 'amount', 'reason', 'is_paid', 'calculated_at')
+    search_fields = ('loan__user__school_mail', 'reason')
+    list_filter = ('is_paid', 'calculated_at')

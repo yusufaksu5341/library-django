@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Benim Ödünçlerim - KTÜ Kütüphanesi{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h2 style="color:var(--accent);margin-bottom:20px">Benim Ödünçlerim</h2>
+  
+  {% if loans %}
+  <table>
+    <thead>
+      <tr>
+        <th>Kitap</th>
+        <th>Yazar</th>
+        <th>Ödünç Tarihi</th>
+        <th>İade Tarihi</th>
+        <th>Durum</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for loan in loans %}
+      <tr>
+        <td><strong>{{ loan.book.title }}</strong></td>
+        <td>{{ loan.book.author.name|default:"-" }}</td>
+        <td>{{ loan.borrowed_at|date:"d.m.Y H:i" }}</td>
+        <td>
+          {% if loan.returned_at %}
+          {{ loan.returned_at|date:"d.m.Y H:i" }}
+          {% else %}
+          {{ loan.due_at|date:"d.m.Y" }}
+          {% if loan.is_overdue %}<span style="color:var(--error)"> (GECİKMİŞ)</span>{% endif %}
+          {% endif %}
+        </td>
+        <td>
+          {% if loan.status == 'returned' %}
+          <span style="color:var(--success);font-weight:bold">İade Edildi</span>
+          {% elif loan.status == 'overdue' or loan.is_overdue %}
+          <span style="color:var(--error);font-weight:bold">Gecikmiş</span>
+          {% else %}
+          <span style="color:var(--accent);font-weight:bold">Aktif</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if loan.status == 'active' %}
+          <a href="{% url 'users:return_book' loan.id %}" class="btn btn-sm btn-danger">İade Et</a>
+          {% else %}
+          -
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="text-align:center;color:var(--muted);margin-top:20px">Henüz hiç kitap ödünç almadınız.</p>
+  {% endif %}
+  
+  <a href="{% url 'users:home' %}" class="btn" style="margin-top:20px">Kitaplara Dön</a>
+</div>
+{% endblock %}

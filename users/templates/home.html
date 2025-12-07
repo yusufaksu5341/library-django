@@ -1,61 +1,98 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Ana Sayfa - KTÜ Kütüphanesi</title>
-  <style>
-    :root{--bg:#f2ecd9;--paper:#faf4df;--accent:#1f5c3d;--muted:#6b6b6b;--border:#c9bc9a}
-    *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%}
-    body{display:flex;justify-content:center;align-items:center;background:linear-gradient(135deg,#efe6cd,#d9cfb1);font-family:"Georgia","Times New Roman",serif;color:#1f1f1f;padding:20px}
-    .card{background:var(--paper);border:1px solid var(--border);border-radius:12px;padding:clamp(20px,4vw,40px);width:clamp(320px,90%,900px);box-shadow:0 6px 16px rgba(0,0,0,0.08);}
-    h1{color:var(--accent);margin-bottom:8px}
-    p{color:var(--muted);margin-bottom:18px}
-    .btn{display:inline-block;padding:10px 18px;border-radius:8px;background:var(--accent);color:#fff;text-decoration:none;font-weight:bold}
-    table{width:100%;border-collapse:collapse;margin-top:20px;background:#fffdf6;border:1px solid var(--border);}
-    th,td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:left;font-size:15px;}
-    th{background:#e9dfc1;color:#1f1f1f;}
-    tbody tr:hover{background:#f5efdb;}
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
-      <div>
-        <h1>Hoşgeldiniz, {{ user.name }}!</h1>
-        <p>{{ user.name }} {{ user.last_name }} olarak giriş yapmış bulunmaktasınız.</p>
-      </div>
-      <a class="btn" href="{% url 'users:logout' %}">Çıkış Yap</a>
-    </div>
+{% extends 'base.html' %}
 
-    <h2 style="color:var(--accent);margin-top:10px;">Kütüphanedeki Kitaplar</h2>
-    {% if books %}
-    <table>
-      <thead>
-        <tr>
-          <th>Başlık</th>
-          <th>Yazar</th>
-          <th>Yıl</th>
-          <th>ISBN</th>
-          <th>Adet</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for book in books %}
-        <tr>
-          <td>{{ book.title }}</td>
-          <td>{{ book.author }}</td>
-          <td>{{ book.published_year|default:'-' }}</td>
-          <td>{{ book.isbn }}</td>
-          <td>{{ book.available_count }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-      <p style="margin-top:12px;">Henüz kitap eklenmedi.</p>
-    {% endif %}
+{% block title %}Kitaplar - KTÜ Kütüphanesi{% endblock %}
+
+{% block extra_css %}
+<style>
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;justify-content:center;align-items:center;}
+.modal-overlay.active{display:flex;}
+.modal-box{background:var(--paper);border:2px solid var(--accent);border-radius:12px;padding:30px;max-width:500px;width:90%;box-shadow:0 10px 30px rgba(0,0,0,0.3);text-align:center;}
+.modal-box h3{color:var(--accent);margin-bottom:15px;font-size:20px;}
+.modal-box p{color:var(--muted);margin-bottom:25px;line-height:1.6;}
+.modal-buttons{display:flex;gap:15px;justify-content:center;}
+.modal-btn{padding:12px 30px;border:none;border-radius:8px;font-weight:bold;font-size:15px;cursor:pointer;transition:all 0.2s;}
+.modal-btn-cancel{background:#ccc;color:#333;}
+.modal-btn-cancel:hover{background:#bbb;}
+.modal-btn-confirm{background:var(--accent);color:#fff;}
+.modal-btn-confirm:hover{filter:brightness(0.9);}
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="borrowModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3>⚠️ Ödünç Alma Onayı</h3>
+    <p>Bu kitabı ödünç almak istediğinize emin misiniz?<br><strong>14 gün</strong> sonra iade etmezseniz hesabınıza <strong>ceza yazılacaktır</strong>.</p>
+    <div class="modal-buttons">
+      <button class="modal-btn modal-btn-cancel" onclick="closeModal()">İptal</button>
+      <a id="confirmBorrowLink" class="modal-btn modal-btn-confirm" href="#">Ödünç Al</a>
+    </div>
   </div>
-</body>
-</html>
+</div>
+
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+    <div>
+      <h2 style="color:var(--accent);margin-bottom:6px">Hoşgeldiniz, {{ user.name }}!</h2>
+      <p style="color:var(--muted);margin-bottom:0">Kütüphanedeki kitapları inceleyebilir ve ödünç alabilirsiniz.</p>
+    </div>
+    <a class="btn" href="{% url 'users:my_loans' %}">Ödünçlerim</a>
+  </div>
+
+  <h3 style="color:var(--accent);margin-top:10px;">Kütüphanedeki Kitaplar</h3>
+  {% if books %}
+  <table>
+    <thead>
+      <tr>
+        <th>Başlık</th>
+        <th>Yazar</th>
+        <th>Yıl</th>
+        <th>ID</th>
+        <th>Uygun Adet</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for book in books %}
+      <tr>
+        <td>{{ book.title }}</td>
+        <td>{{ book.author.name|default:book.author }}</td>
+        <td>{{ book.published_year|default:'-' }}</td>
+        <td>{{ book.id }}</td>
+        <td>{{ book.available_count }}</td>
+        <td>
+          {% if book.available_count|default:0 > 0 %}
+            {% if book.id in active_book_ids %}
+              <span style="color:var(--muted);font-weight:bold">Zaten sizde</span>
+            {% else %}
+              <a class="btn btn-sm borrow-btn" href="{% url 'users:borrow_book' book.id %}" onclick="event.preventDefault(); showBorrowModal(this.href);">Ödünç Al</a>
+            {% endif %}
+          {% else %}
+            <span style="color:var(--error);font-weight:bold">Müsait değil</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p style="margin-top:12px;">Henüz kitap eklenmedi.</p>
+  {% endif %}
+</div>
+
+<script>
+function showBorrowModal(url) {
+  document.getElementById('confirmBorrowLink').href = url;
+  document.getElementById('borrowModal').classList.add('active');
+}
+function closeModal() {
+  document.getElementById('borrowModal').classList.remove('active');
+}
+window.onclick = function(event) {
+  const modal = document.getElementById('borrowModal');
+  if (event.target == modal) {
+    closeModal();
+  }
+}
+</script>
+{% endblock %}

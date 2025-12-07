@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Cezalarım - KTÜ Kütüphanesi{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h2 style="color:var(--accent);margin-bottom:20px">Cezalarım</h2>
+  
+  {% if total_unpaid > 0 %}
+  <div style="background:#fff3cd;border:1px solid #ffeaa7;padding:15px;border-radius:6px;margin-bottom:20px">
+    <strong style="color:#856404">Ödenmemiş Cezalar Toplamı:</strong>
+    <span style="color:#856404;font-size:18px;font-weight:bold">{{ total_unpaid }} TL</span>
+  </div>
+  {% endif %}
+  
+  {% if penalties %}
+  <table>
+    <thead>
+      <tr>
+        <th>Kitap</th>
+        <th>Nedeni</th>
+        <th>Tutar</th>
+        <th>Durum</th>
+        <th>Tarih</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for penalty in penalties %}
+      <tr>
+        <td><strong>{{ penalty.loan.book.title }}</strong></td>
+        <td>{{ penalty.reason }}</td>
+        <td style="font-weight:bold">{{ penalty.amount }} TL</td>
+        <td>
+          {% if penalty.is_paid %}
+          <span style="color:var(--success);font-weight:bold">Ödendi</span>
+          {% else %}
+          <span style="color:var(--error);font-weight:bold">Ödenmedi</span>
+          {% endif %}
+        </td>
+        <td>{{ penalty.calculated_at|date:"d.m.Y" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="text-align:center;color:var(--success);margin-top:20px;font-weight:bold">
+    🎉 Ceza bulunmuyor! Tebrikler!
+  </p>
+  {% endif %}
+  
+  <a href="{% url 'users:home' %}" class="btn" style="margin-top:20px">Kitaplara Dön</a>
+</div>
+{% endblock %}

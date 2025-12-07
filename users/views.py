@@ -1,10 +1,12 @@
 
 # users/views.py
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import LibraryUser, Book
+from django.utils import timezone
+from datetime import timedelta
+from .models import LibraryUser, Book, Loan, Penalty
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
-from django.db import IntegrityError
+from django.db import IntegrityError, models
 
 
 def login_view(request):
@@ -19,7 +21,6 @@ def login_view(request):
         try:
             user = LibraryUser.objects.get(school_mail=school_mail)
             if check_password(password, user.password):
-                # Login başarılı - session'a user bilgisi eklenir
                 request.session['user_id'] = user.id
                 request.session['user_mail'] = user.school_mail
                 messages.success(request, f'Hoş geldin {user.name}!')
@@ -109,10 +110,116 @@ def home_view(request):
     user_id = request.session.get('user_id')
     if not user_id:
         return redirect('users:login')
+    user = LibraryUser.objects.filter(pk=user_id).first()
+    if not user:
+        request.session.flush()
+        messages.info(request, 'Oturum süresi doldu, lütfen tekrar giriş yapın.')
+        return redirect('users:login')
 
-    user = get_object_or_404(LibraryUser, pk=user_id)
     books = Book.objects.all().order_by('title')
-    return render(request, 'home.html', {'user': user, 'books': books})
+    active_loans = Loan.objects.filter(user=user, status='active').values_list('book_id', flat=True)
+    return render(request, 'home.html', {
+        'user': user,
+        'books': books,
+        'active_book_ids': list(active_loans),
+    })
+
+
+def borrow_book(request, book_id):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('users:login')
+    user = LibraryUser.objects.filter(pk=user_id).first()
+    if not user:
+        request.session.flush()
+        messages.info(request, 'Oturum süresi doldu, lütfen tekrar giriş yapın.')
+        return redirect('users:login')
+
+    book = get_object_or_404(Book, pk=book_id)
+
+    if book.available_count <= 0:
+        messages.error(request, 'Bu kitap şu an uygun değil.')
+        return redirect('users:home')
+
+    user_active_loan_count = Loan.objects.filter(user=user, status='active').count()
+    if user_active_loan_count >= 1:
+        messages.error(request, 'Aynı anda sadece 1 kitap ödünç alabilirsiniz. Önce mevcut kitabı iade edin.')
+        return redirect('users:my_loans')
+
+    existing_active = Loan.objects.filter(user=user, book=book, status='active').exists()
+    if existing_active:
+        messages.warning(request, 'Bu kitabı zaten ödünç aldınız.')
+        return redirect('users:my_loans')
+
+    due_date = timezone.now() + timedelta(days=14)
+    Loan.objects.create(
+        user=user,
+        book=book,
+        due_at=due_date,
+        status='active'
+    )
+    Book.objects.filter(pk=book.pk).update(available_count=models.F('available_count') - 1)
+
+    messages.success(request, f"'{book.title}' kitabını 14 günlüğüne ödünç aldınız. İade tarihi: {due_date.strftime('%d.%m.%Y')}")
+    return redirect('users:my_loans')
+
+
+def my_loans_view(request):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('users:login')
+    user = LibraryUser.objects.filter(pk=user_id).first()
+    if not user:
+        request.session.flush()
+        messages.info(request, 'Oturum süresi doldu, lütfen tekrar giriş yapın.')
+        return redirect('users:login')
+
+    loans = Loan.objects.filter(user=user).select_related('book', 'book__author').order_by('-borrowed_at')
+    return render(request, 'my_loans.html', {'user': user, 'loans': loans})
+
+
+def return_book(request, loan_id):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('users:login')
+    user = LibraryUser.objects.filter(pk=user_id).first()
+    if not user:
+        request.session.flush()
+        messages.info(request, 'Oturum süresi doldu, lütfen tekrar giriş yapın.')
+        return redirect('users:login')
+
+    loan = get_object_or_404(Loan, pk=loan_id, user=user)
+    if loan.status != 'active':
+        messages.warning(request, 'Bu ödünç kaydı zaten kapatılmış.')
+        return redirect('users:my_loans')
+
+    loan.returned_at = timezone.now()
+    loan.status = 'returned'
+    loan.save(update_fields=['returned_at', 'status'])
+
+    Book.objects.filter(pk=loan.book_id).update(available_count=models.F('available_count') + 1)
+
+    messages.success(request, f"'{loan.book.title}' iade edildi.")
+    return redirect('users:my_loans')
+
+
+def penalties_view(request):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('users:login')
+    user = LibraryUser.objects.filter(pk=user_id).first()
+    if not user:
+        request.session.flush()
+        messages.info(request, 'Oturum süresi doldu, lütfen tekrar giriş yapın.')
+        return redirect('users:login')
+
+    penalties = Penalty.objects.filter(loan__user=user).select_related('loan', 'loan__book').order_by('-calculated_at')
+    total_unpaid = penalties.filter(is_paid=False).aggregate(sum_amount=models.Sum('amount'))['sum_amount'] or 0
+    return render(request, 'penalties.html', {
+        'user': user,
+        'penalties': penalties,
+        'total_unpaid': total_unpaid,
+    })
 
 
 def logout_view(request):

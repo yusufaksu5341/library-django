@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}KTÜ Kütüphanesi{% endblock %}</title>
+  <style>
+    :root{--bg:#f2ecd9;--paper:#faf4df;--accent:#1f5c3d;--muted:#6b6b6b;--border:#c9bc9a;--error:#c00;--success:#0a6e0a}
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;font-family:"Georgia","Times New Roman",serif;color:#1f1f1f}
+    body{background:linear-gradient(135deg,#efe6cd,#d9cfb1);padding:20px}
+    
+    nav{background:var(--accent);color:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:8px;margin-bottom:20px}
+    nav h1{font-size:20px}
+    nav .nav-links{display:flex;gap:15px;align-items:center}
+    nav a{color:#fff;text-decoration:none;font-weight:bold}
+    nav a:hover{opacity:0.8}
+    
+    .container{max-width:1200px;margin:0 auto}
+    
+    .messages{list-style:none;margin-bottom:15px}
+    .messages li{padding:12px;border-radius:6px;margin-bottom:8px}
+    .messages .error{background:#ffe6e6;color:var(--error);border:1px solid #ffb3b3}
+    .messages .success{background:#e6ffe6;color:var(--success);border:1px solid #b3ffb3}
+    .messages .info{background:#e6f3ff;color:#0066cc;border:1px solid #b3d9ff}
+    .messages .warning{background:#fff3cd;color:#856404;border:1px solid #ffeaa7}
+    
+    .card{background:var(--paper);border:1px solid var(--border);border-radius:12px;padding:clamp(20px,4vw,40px);box-shadow:0 6px 16px rgba(0,0,0,0.08)}
+    
+    .btn{display:inline-block;padding:10px 18px;border-radius:8px;background:var(--accent);color:#fff;text-decoration:none;font-weight:bold;border:none;cursor:pointer;font-size:14px}
+    .btn:hover{filter:brightness(.95)}
+    .btn-sm{padding:8px 12px;font-size:12px}
+    .btn-danger{background:#c00}
+    .btn-success{background:var(--success)}
+    
+    table{width:100%;border-collapse:collapse;margin-top:20px;background:#fffdf6;border:1px solid var(--border)}
+    th,td{padding:12px;border-bottom:1px solid var(--border);text-align:left}
+    th{background:#e9dfc1;color:#1f1f1f;font-weight:bold}
+    tbody tr:hover{background:#f5efdb}
+    
+    .form-group{margin-bottom:15px}
+    label{display:block;font-weight:bold;margin-bottom:5px;color:var(--muted);font-size:14px}
+    input,select,textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:#fffdf6;font-size:14px;font-family:inherit}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(31,92,61,0.1)}
+    
+    .search-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+    .search-bar input{flex:1;min-width:200px}
+    .search-bar select{min-width:150px}
+    .search-bar .btn{margin:0}
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <nav>
+    <h1>📚 KTÜ Kütüphanesi</h1>
+    <div class="nav-links">
+      {% if user %}
+        <span>Hoşgeldiniz, {{ user.name }}</span>
+        <a href="{% url 'users:home' %}">Kitaplar</a>
+        <a href="{% url 'users:my_loans' %}">Ödünçlerim</a>
+        <a href="{% url 'users:penalties' %}">Cezalarım</a>
+        <a href="{% url 'users:logout' %}">Çıkış</a>
+      {% else %}
+        <a href="{% url 'users:login' %}">Giriş</a>
+        <a href="{% url 'users:signup' %}">Kayıt Ol</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <div class="container">
+    {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+      <li class="{% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

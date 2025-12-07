@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ book.title }} - KTÜ Kütüphanesi{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:600px;margin:0 auto">
+  <a href="{% url 'users:home' %}" style="color:var(--accent);text-decoration:none;margin-bottom:15px;display:inline-block">← Kitaplara Dön</a>
+  
+  <h2 style="color:var(--accent);margin:15px 0">{{ book.title }}</h2>
+  
+  <div class="form-group">
+    <label>Yazar:</label>
+    <p>{{ book.author.name|default:"Bilinmiyor" }}</p>
+  </div>
+  
+  <div class="form-group">
+    <label>Kategori:</label>
+    <p>{{ book.category.name|default:"Kategorisiz" }}</p>
+  </div>
+  
+  <div class="form-group">
+    <label>Yayın Yılı:</label>
+    <p>{{ book.published_year|default:"-" }}</p>
+  </div>
+  
+  <div class="form-group">
+    <label>ISBN:</label>
+    <p>{{ book.isbn }}</p>
+  </div>
+  
+  <div class="form-group">
+    <label>Açıklama:</label>
+    <p>{{ book.description|default:"Açıklama bulunmuyor" }}</p>
+  </div>
+  
+  <div class="form-group">
+    <label>Stok Durumu:</label>
+    <p>
+      {% if book.available_count > 0 %}
+      <span style="color:var(--success);font-weight:bold">{{ book.available_count }} / {{ book.total_count }} müsait</span>
+      {% else %}
+      <span style="color:var(--error);font-weight:bold">Şu anda müsait değil</span>
+      {% endif %}
+    </p>
+  </div>
+  
+  {% if book.available_count > 0 %}
+  <a href="{% url 'users:borrow_book' book.id %}" class="btn btn-success" style="width:100%;text-align:center">Ödünç Al (14 gün)</a>
+  {% else %}
+  <button disabled class="btn" style="width:100%;opacity:0.5">Müsait Değil</button>
+  {% endif %}
+</div>
+{% endblock %}
