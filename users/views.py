@@ -1,12 +1,12 @@
 
-# users/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from datetime import timedelta
-from .models import LibraryUser, Book, Loan, Penalty
+from .models import LibraryUser, Book, Loan, Penalty, Category
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 from django.db import IntegrityError, models
+from django.db.models import Q
 
 
 def login_view(request):
@@ -117,11 +117,45 @@ def home_view(request):
         return redirect('users:login')
 
     books = Book.objects.all().order_by('title')
+    categories = Category.objects.all()
     active_loans = Loan.objects.filter(user=user, status='active').values_list('book_id', flat=True)
+    
+    category_filter = request.GET.get('category')
+    search_query = request.GET.get('search', '').strip()
+    available_only = request.GET.get('available') == '1'
+    min_year = request.GET.get('min_year', '').strip()
+    max_year = request.GET.get('max_year', '').strip()
+    
+    if category_filter:
+        books = books.filter(category_id=category_filter)
+    if available_only:
+        unavailable_ids = Loan.objects.filter(status='active').values_list('book_id', flat=True)
+        books = books.exclude(id__in=unavailable_ids)
+
+    # Smarter search: ignore 1-char terms; require each term to match title or author
+    search_terms = [term for term in search_query.split() if len(term) >= 2]
+    if search_terms:
+        search_filter = Q()
+        for term in search_terms:
+            search_filter &= (Q(title__icontains=term) | Q(author__name__icontains=term) | Q(author__icontains=term))
+        books = books.filter(search_filter)
+
+    # Year filters if provided
+    if min_year.isdigit():
+        books = books.filter(published_year__gte=int(min_year))
+    if max_year.isdigit():
+        books = books.filter(published_year__lte=int(max_year))
+    
     return render(request, 'home.html', {
         'user': user,
         'books': books,
+        'categories': categories,
         'active_book_ids': list(active_loans),
+        'selected_category': category_filter,
+        'search_query': search_query,
+        'available_only': available_only,
+        'min_year': min_year,
+        'max_year': max_year,
     })
 
 
@@ -137,7 +171,8 @@ def borrow_book(request, book_id):
 
     book = get_object_or_404(Book, pk=book_id)
 
-    if book.available_count <= 0:
+    active_loan = Loan.objects.filter(book=book, status='active').first()
+    if active_loan:
         messages.error(request, 'Bu kitap şu an uygun değil.')
         return redirect('users:home')
 
@@ -158,9 +193,8 @@ def borrow_book(request, book_id):
         due_at=due_date,
         status='active'
     )
-    Book.objects.filter(pk=book.pk).update(available_count=models.F('available_count') - 1)
 
-    messages.success(request, f"'{book.title}' kitabını 14 günlüğüne ödünç aldınız. İade tarihi: {due_date.strftime('%d.%m.%Y')}")
+    messages.success(request, f"'{book.title}' kitabını ödünç aldınız. İade tarihi: {due_date.strftime('%d.%m.%Y')}")
     return redirect('users:my_loans')
 
 
@@ -197,8 +231,6 @@ def return_book(request, loan_id):
     loan.status = 'returned'
     loan.save(update_fields=['returned_at', 'status'])
 
-    Book.objects.filter(pk=loan.book_id).update(available_count=models.F('available_count') + 1)
-
     messages.success(request, f"'{loan.book.title}' iade edildi.")
     return redirect('users:my_loans')
 
@@ -229,3 +261,8 @@ def logout_view(request):
         pass
     messages.info(request, 'Çıkış yapıldı.')
     return redirect('users:login')
+
+
+def book_detail(request, book_id):
+    book = get_object_or_404(Book, pk=book_id)
+    return render(request, 'book_detail.html', {'book': book})

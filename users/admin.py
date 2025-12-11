@@ -29,11 +29,10 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'category', 'id', 'available_count', 'total_count', 'get_active_borrowers')
+    list_display = ('title', 'author', 'category', 'id', 'get_active_borrowers')
     search_fields = ('title', 'author__name')
     list_filter = ('author', 'category', 'published_year')
     ordering = ('title',)
-    readonly_fields = ('available_count',)
 
     def get_active_borrowers(self, obj):
         borrowers = Loan.objects.filter(book=obj, status='active').select_related('user').values_list('user__school_mail', flat=True)

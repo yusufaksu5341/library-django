@@ -1,5 +1,4 @@
 
-# users/urls.py
 from django.urls import path
 from users.views import (
     signup,
@@ -10,6 +9,7 @@ from users.views import (
     my_loans_view,
     return_book,
     penalties_view,
+    book_detail,
 )
 
 app_name = 'users'
@@ -19,6 +19,7 @@ urlpatterns = [
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
     path('signup/', signup, name='signup'),
+    path('book/<int:book_id>/', book_detail, name='book_detail'),
     path('borrow/<int:book_id>/', borrow_book, name='borrow_book'),
     path('loans/', my_loans_view, name='my_loans'),
     path('return/<int:loan_id>/', return_book, name='return_book'),

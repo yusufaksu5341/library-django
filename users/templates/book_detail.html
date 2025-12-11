@@ -1,53 +1,25 @@
-{% extends 'base.html' %}
-
-{% block title %}{{ book.title }} - KTÜ Kütüphanesi{% endblock %}
-
-{% block content %}
-<div class="card" style="max-width:600px;margin:0 auto">
-  <a href="{% url 'users:home' %}" style="color:var(--accent);text-decoration:none;margin-bottom:15px;display:inline-block">← Kitaplara Dön</a>
-  
-  <h2 style="color:var(--accent);margin:15px 0">{{ book.title }}</h2>
-  
-  <div class="form-group">
-    <label>Yazar:</label>
-    <p>{{ book.author.name|default:"Bilinmiyor" }}</p>
-  </div>
-  
-  <div class="form-group">
-    <label>Kategori:</label>
-    <p>{{ book.category.name|default:"Kategorisiz" }}</p>
-  </div>
-  
-  <div class="form-group">
-    <label>Yayın Yılı:</label>
-    <p>{{ book.published_year|default:"-" }}</p>
-  </div>
-  
-  <div class="form-group">
-    <label>ISBN:</label>
-    <p>{{ book.isbn }}</p>
-  </div>
-  
-  <div class="form-group">
-    <label>Açıklama:</label>
-    <p>{{ book.description|default:"Açıklama bulunmuyor" }}</p>
-  </div>
-  
-  <div class="form-group">
-    <label>Stok Durumu:</label>
-    <p>
-      {% if book.available_count > 0 %}
-      <span style="color:var(--success);font-weight:bold">{{ book.available_count }} / {{ book.total_count }} müsait</span>
-      {% else %}
-      <span style="color:var(--error);font-weight:bold">Şu anda müsait değil</span>
-      {% endif %}
-    </p>
-  </div>
-  
-  {% if book.available_count > 0 %}
-  <a href="{% url 'users:borrow_book' book.id %}" class="btn btn-success" style="width:100%;text-align:center">Ödünç Al (14 gün)</a>
+<div style="text-align:center;">
+  {% if book.cover_image %}
+  <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" style="max-width:200px;height:auto;border-radius:8px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
   {% else %}
-  <button disabled class="btn" style="width:100%;opacity:0.5">Müsait Değil</button>
+  <div style="width:200px;height:280px;background:#e0e0e0;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;border-radius:8px;color:#999;">
+    Kitap Kapağı Yok
+  </div>
   {% endif %}
+
+  <h2 style="color:var(--accent);margin-bottom:10px;">{{ book.title }}</h2>
+  
+  <div style="text-align:left;display:inline-block;min-width:300px;">
+    <p><strong>Yazar:</strong> {{ book.author.name|default:book.author }}</p>
+    <p><strong>Kategori:</strong> {{ book.category.name|default:'-' }}</p>
+    <p><strong>Yayın Yılı:</strong> {{ book.published_year|default:'-' }}</p>
+    <p><strong>ISBN:</strong> {{ book.isbn }}</p>
+    
+    {% if book.description %}
+    <div style="margin-top:15px;padding-top:15px;border-top:1px solid var(--border);">
+      <strong>Açıklama:</strong>
+      <p style="margin-top:8px;color:var(--muted);line-height:1.6;">{{ book.description }}</p>
+    </div>
+    {% endif %}
+  </div>
 </div>
-{% endblock %}

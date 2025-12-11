@@ -38,9 +38,8 @@ class Book(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='books')
     published_year = models.PositiveIntegerField(blank=True, null=True)
     isbn = models.CharField(max_length=20, unique=True)
-    available_count = models.PositiveIntegerField(default=0)
-    total_count = models.PositiveIntegerField(default=0)
     description = models.TextField(blank=True, null=True)
+    cover_image = models.ImageField(upload_to='book_covers/', blank=True, null=True)
 
     def __str__(self):
         return f"{self.title} - {self.author}"
