@@ -4,27 +4,53 @@
 
 {% block extra_css %}
 <style>
+:root {
+  --accent: #7b4b2a;
+  --accent-2: #c49660;
+  --border: #e4d7c8;
+  --paper: #fff9f2;
+  --muted: #6b5845;
+  --text: #2c2218;
+}
+
+body { background: radial-gradient(circle at 20% 20%, #fff5e6, #f3e4cf 40%, #e8d5bf 80%); }
+
 * { transition: all 0.3s ease; }
 
 .header-section {
-  background: linear-gradient(135deg, var(--accent) 0%, #2a7d52 100%);
-  color: white;
+  background: linear-gradient(140deg, #8d5a36 0%, #c49b64 45%, #f1e0c7 100%);
+  color: #2c2218;
   padding: 40px 20px;
-  border-radius: 12px;
+  border-radius: 16px;
   margin-bottom: 30px;
-  box-shadow: 0 8px 24px rgba(31, 92, 61, 0.2);
+  box-shadow: 0 14px 32px rgba(77, 55, 34, 0.22);
+  position: relative;
+  overflow: hidden;
+}
+
+.header-section::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1200&q=80') center/cover;
+  opacity: 0.08;
+  pointer-events: none;
 }
 
 .header-section h2 {
   font-size: 32px;
   margin: 0 0 10px 0;
   animation: slideDown 0.5s ease;
+  position: relative;
+  z-index: 1;
 }
 
 .header-section p {
   margin: 0;
   opacity: 0.95;
   animation: slideUp 0.5s ease 0.1s backwards;
+  position: relative;
+  z-index: 1;
 }
 
 @keyframes slideDown {
@@ -88,9 +114,10 @@
   padding: 10px 12px;
   border: 2px solid var(--border);
   border-radius: 10px;
-  background: #fff;
+  background: #fffaf2;
   color: var(--text, #222);
   font-size: 13px;
+  box-shadow: 0 6px 14px rgba(124, 90, 58, 0.08);
 }
 
 .filter-chip input,
@@ -109,6 +136,42 @@
   margin-bottom: 4px;
 }
 
+.pill-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  background: #fffaf2;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 6px 14px rgba(124, 90, 58, 0.08);
+}
+
+.pill-toggle .dot {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  background: #fff;
+  transition: all 0.2s;
+}
+
+.pill-input { display: none; }
+
+.pill-input:checked + label.pill-toggle {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 10px 18px rgba(123, 75, 42, 0.18);
+}
+
+.pill-input:checked + label.pill-toggle .dot {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
 .toggle-row {
   display: flex;
   align-items: center;
@@ -123,7 +186,8 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 4px;
-  background: #fffdf6;
+  background: #fff6ea;
+  box-shadow: 0 6px 14px rgba(124, 90, 58, 0.12);
 }
 
 .view-btn {
@@ -163,21 +227,21 @@
 }
 
 .book-card {
-  background: white;
+  background: #fffdf8;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   height: 100%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 20px rgba(74, 52, 30, 0.12);
 }
 
 .book-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 16px 28px rgba(74, 52, 30, 0.18);
   border-color: var(--accent);
 }
 
@@ -190,11 +254,11 @@
 .book-cover {
   width: 100%;
   height: 280px;
-  background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
+  background: linear-gradient(135deg, #f6e9d7 0%, #ead9c5 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
+  color: #9c7b5c;
   font-size: 14px;
   overflow: hidden;
   position: relative;
@@ -242,7 +306,7 @@
 
 .book-author {
   font-size: 13px;
-  color: var(--muted);
+  color: #856a52;
   margin-bottom: 8px;
 }
 
@@ -309,7 +373,7 @@
 .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;justify-content:center;align-items:center;animation:fadeIn 0.2s;}
 .modal-overlay.active{display:flex;}
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-.modal-box{background:var(--paper);border:2px solid var(--accent);border-radius:12px;padding:30px;max-width:500px;width:90%;box-shadow:0 10px 30px rgba(0,0,0,0.3);text-align:center;animation:slideInUp 0.3s;}
+.modal-box{background:var(--paper);border:2px solid var(--accent);border-radius:12px;padding:30px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,0.3);text-align:center;animation:slideInUp 0.3s;}
 @keyframes slideInUp{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
 .modal-box h3{color:var(--accent);margin-bottom:15px;font-size:20px;}
 .modal-box p{color:var(--muted);margin-bottom:25px;line-height:1.6;}
@@ -379,12 +443,12 @@
         <input type="number" name="max_year" placeholder="2025" value="{{ max_year }}">
       </div>
 
-      <div class="filter-chip" style="width: 150px;">
-        <label>Durum</label>
-        <div class="toggle-row">
-          <input type="checkbox" id="available" name="available" value="1" {% if available_only %}checked{% endif %} onchange="this.form.submit()">
-          <label for="available" style="margin:0;cursor:pointer;">Sadece müsait</label>
-        </div>
+      <div>
+        <input type="checkbox" class="pill-input" id="available" name="available" value="1" {% if available_only %}checked{% endif %} onchange="this.form.submit()">
+        <label for="available" class="pill-toggle">
+          <span class="dot"></span>
+          Sadece müsait
+        </label>
       </div>
     </div>
 
@@ -447,6 +511,8 @@ function showBookDetail(bookId) {
     .then(html => {
       document.getElementById('bookDetailContent').innerHTML = html;
       document.getElementById('bookDetailModal').classList.add('active');
+      const modalBox = document.querySelector('#bookDetailModal .modal-box');
+      if (modalBox) modalBox.scrollTop = 0;
     })
     .catch(error => console.error('Error:', error));
 }
