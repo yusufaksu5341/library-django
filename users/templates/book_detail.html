@@ -1,24 +1,30 @@
-<div style="text-align:center;">
+<div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:14px; padding-top:12px;">
   {% if book.cover_image %}
-  <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" style="max-width:200px;height:auto;border-radius:8px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+  <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" style="max-width:220px;height:auto;border-radius:8px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
   {% else %}
-  <div style="width:200px;height:280px;background:#e0e0e0;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;border-radius:8px;color:#999;">
+  <div style="width:200px;height:280px;background:#e0e0e0;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;border-radius:8px;color:#999;">
     Kitap Kapağı Yok
   </div>
   {% endif %}
 
   <h2 style="color:var(--accent);margin-bottom:10px;">{{ book.title }}</h2>
-  
-  <div style="text-align:left;display:inline-block;min-width:300px;">
+
+  <div style="text-align:left;display:inline-block;min-width:300px;max-width:520px;">
     <p><strong>Yazar:</strong> {{ book.author.name|default:book.author }}</p>
-    <p><strong>Kategori:</strong> {{ book.category.name|default:'-' }}</p>
+    <p><strong>Kategoriler:</strong>
+      {% with book.categories.all as cats %}
+        {% if cats %}
+          {% for cat in cats %}{{ cat.name }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}
+        {% else %}-{% endif %}
+      {% endwith %}
+    </p>
     <p><strong>Yayın Yılı:</strong> {{ book.published_year|default:'-' }}</p>
     <p><strong>ISBN:</strong> {{ book.isbn }}</p>
     
     {% if book.description %}
     <div style="margin-top:15px;padding-top:15px;border-top:1px solid var(--border);">
       <strong>Açıklama:</strong>
-      <p style="margin-top:8px;color:var(--muted);line-height:1.6;">{{ book.description }}</p>
+      <p style="margin-top:8px;color:var(--muted);line-height:1.6;">{{ book.description|safe }}</p>
     </div>
     {% endif %}
   </div>

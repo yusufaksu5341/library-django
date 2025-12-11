@@ -414,7 +414,14 @@
     <div class="book-info">
       <div class="book-title">{{ book.title }}</div>
       <div class="book-author">{{ book.author.name|default:'-' }}</div>
-      <div class="book-meta">{{ book.category.name|default:'-' }} • {{ book.published_year|default:'-' }}</div>
+      <div class="book-meta">
+        {% with book.categories.all as cats %}
+          {% if cats %}
+            {% for cat in cats %}{{ cat.name }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}
+          {% else %}-{% endif %}
+        {% endwith %}
+         • {{ book.published_year|default:'-' }}
+      </div>
       <div class="book-actions" onclick="event.stopPropagation();">
         {% if book.id in active_book_ids %}
           <button class="book-action-btn" disabled>Zaten Sizde</button>

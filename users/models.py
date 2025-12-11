@@ -35,7 +35,7 @@ class Category(models.Model):
 class Book(models.Model):
     title = models.CharField(max_length=200)
     author = models.ForeignKey(Author, on_delete=models.SET_NULL, null=True, related_name='books')
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='books')
+    categories = models.ManyToManyField(Category, related_name='books', blank=True)
     published_year = models.PositiveIntegerField(blank=True, null=True)
     isbn = models.CharField(max_length=20, unique=True)
     description = models.TextField(blank=True, null=True)

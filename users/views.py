@@ -116,7 +116,7 @@ def home_view(request):
         messages.info(request, 'Oturum süresi doldu, lütfen tekrar giriş yapın.')
         return redirect('users:login')
 
-    books = Book.objects.all().order_by('title')
+    books = Book.objects.all().prefetch_related('categories', 'author').order_by('title')
     categories = Category.objects.all()
     active_loans = Loan.objects.filter(user=user, status='active').values_list('book_id', flat=True)
     
@@ -127,7 +127,7 @@ def home_view(request):
     max_year = request.GET.get('max_year', '').strip()
     
     if category_filter:
-        books = books.filter(category_id=category_filter)
+        books = books.filter(categories__id=category_filter)
     if available_only:
         unavailable_ids = Loan.objects.filter(status='active').values_list('book_id', flat=True)
         books = books.exclude(id__in=unavailable_ids)
@@ -146,6 +146,8 @@ def home_view(request):
     if max_year.isdigit():
         books = books.filter(published_year__lte=int(max_year))
     
+    books = books.distinct()
+
     return render(request, 'home.html', {
         'user': user,
         'books': books,
